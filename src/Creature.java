@@ -75,6 +75,7 @@ public class Creature {
                     double in_strength,
                     int[] in_fears,
                     int[] in_foods,
+                    Personality in_personality,
                     int spawnX,
                     int spawnY) {
 
@@ -87,13 +88,13 @@ public class Creature {
         pApplet = in_pApplet;
         fears = in_fears;
         foods = in_foods;
+        personality = in_personality;
         priority = WANDER;
         maxHealth = in_health;
 
         targets = new ArrayList<>();
         family = new ArrayList<>();
 
-        personality = new Personality();
 
         rand = new Random();
 
@@ -134,6 +135,10 @@ public class Creature {
             pApplet.fill(0, 200);
             pApplet.text(displayText, 0,0, 100);
 
+            pApplet.textSize(30);
+            pApplet.fill(0, 200);
+            pApplet.text(personality.toString(), pApplet.width-400,pApplet.height-250, 100);
+
             //tint image
             pApplet.tint(255,0,0);
         } else {
@@ -156,30 +161,31 @@ public class Creature {
         for (Creature target : targets) {
             //ensure creature does not exit the map
             //if target is to the left
-            if ((target.x < x) && (x - (speed * energy) >= 0)) {
+            if ((target.x < x) && ((x + (speed * energy)) + image.width <= pApplet.width)) {
 
                 //if target is below
                 if ((target.y < y) && (y - (speed * energy) >= 0)) {
                     run(UP_RIGHT);
 
                     //if target is above
-                } else if ((target.y > y) && (y + (speed * energy) + image.height <= pApplet.height)) {
+                } else if ((target.y > y) && ((y - (speed * energy)) + image.height <= pApplet.height)) {
                     run(DOWN_RIGHT);
                     //if target is directly left
                 } else {
                     run(RIGHT);
                 }
-                //if target is to the right
-            } else if ((target.x > x) && (x + (speed * energy) + image.width <= pApplet.width)) {
+            //if target is to the right
+            } else if ((target.x > x) && (x - (speed * energy) >= 0)) {
 
                 //if target is below
                 if ((target.y < y) && (y - (speed * energy) >= 0)) {
                     run(UP_LEFT);
 
-                    //if target is above
+                //if target is above
                 } else if ((target.y > y) && (y + (speed * energy) + image.height <= pApplet.height)) {
                     run(DOWN_LEFT);
-                    //if target is directly left
+
+                //if target is directly left
                 } else {
                     run(LEFT);
                 }
@@ -203,11 +209,11 @@ public class Creature {
             if ((target.x < x) && (x - (speed * energy) >= 0)) {
 
                 //if target is below
-                if ((target.y < y) && (y - (speed * energy) >= 0)) {
+                if ((target.y < y) && ((y + (speed * energy)) + image.height >= image.height)) {
                     run(DOWN_LEFT);
 
                 //if target is above
-                } else if ((target.y > y) && (y + (speed * energy) + image.height <= pApplet.height)) {
+                } else if ((target.y > y) && (y - (speed * energy) >= 0)) {
                     run(UP_LEFT);
                 //if target is directly left
                 } else {
@@ -217,11 +223,11 @@ public class Creature {
             } else if ((target.x > x) && (x + (speed * energy) + image.width <= pApplet.width)) {
 
                 //if target is below
-                if ((target.y < y) && (y - (speed * energy) >= 0)) {
+                if ((target.y < y) && (y + (speed * energy) + image.height <= pApplet.height)) {
                     run(DOWN_RIGHT);
 
                     //if target is above
-                } else if ((target.y > y) && (y + (speed * energy) + image.height <= pApplet.height)) {
+                } else if ((target.y > y) && (y - (speed * energy) <= pApplet.height)) {
                     run(UP_RIGHT);
                     //if target is directly left
                 } else {
@@ -230,9 +236,9 @@ public class Creature {
 
             //if target is directly above or below
             } else {
-                if ((target.y < y) && (y - (speed * energy) >= 0)) {
+                if ((target.y < y) && ((y + (speed * energy)) + image.height <= pApplet.height)) {
                     run(DOWN);
-                } else if ((target.y > y) && (y + (speed * energy) + image.height <= pApplet.height)) {
+                } else if ((target.y > y) && (y - (speed * energy) >= 0)) {
                     run(UP);
                 }
             }
@@ -255,9 +261,6 @@ public class Creature {
             } else if (direction >= DIRECTIONS.length) {
                 direction -= DIRECTIONS.length;
             }
-
-            assert direction > 0;
-            assert direction <= 7;
         }
 
         //prevent creatures from getting stuck in corners
@@ -438,7 +441,7 @@ public class Creature {
             }
 
             for (int tastyCreature : foods) {
-                if ((c.species == tastyCreature) && energy < 3) {
+                if ((c.species == tastyCreature) && ((energy < 3) || personality.greedy)) {
                     priority = EAT;
                     targets.add(c);
                 }
@@ -452,7 +455,14 @@ public class Creature {
             if ((c.species == species) && (c.energy > 2) && !family.contains(c)) {
                 priority = FUCK;
                 targets.add(c);
+                return;
             }
+
+            if ((family.contains(c)) || ((c.species == species) && personality.friendly)){
+                priority = FOLLOW;
+                targets.add(c);
+            }
+
         }
 
         //all targets must be of same type

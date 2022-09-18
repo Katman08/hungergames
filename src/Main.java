@@ -69,7 +69,7 @@ public class Main extends PApplet {
         spawnBurgers(10);
     }
 
-    final int NOTICE_DISTANCE = 100;
+    final int NOTICE_DISTANCE = 150;
     @Override
     public void draw() {
 
@@ -265,7 +265,20 @@ public class Main extends PApplet {
         }
 
         return average + mutation;
+    }
 
+    public Personality mutate(Personality parent1, Personality parent2) {
+        Random rand = new Random();
+
+        Personality child = new Personality();
+
+        child.helpful = (new boolean[] {parent1.helpful, parent2.helpful, rand.nextBoolean()})[rand.nextInt(2)];
+        child.aggressive = (new boolean[] {parent1.aggressive, parent2.aggressive, rand.nextBoolean()})[rand.nextInt(2)];
+        child.mean = (new boolean[] {parent1.mean, parent2.mean, rand.nextBoolean()})[rand.nextInt(2)];
+        child.friendly = (new boolean[] {parent1.friendly, parent2.friendly, rand.nextBoolean()})[rand.nextInt(2)];
+        child.greedy = (new boolean[] {parent1.greedy, parent2.greedy, rand.nextBoolean()})[rand.nextInt(2)];
+
+        return child;
     }
 
     public void reproduce(Creature creature1, Creature creature2) {
@@ -278,8 +291,10 @@ public class Main extends PApplet {
         double in_strength = mutate(creature1.strength, creature2.strength);
         int[] in_fears = creature1.fears;
         int[] in_foods = creature1.fears;
+        Personality in_personality = mutate(creature1.personality, creature2.personality);
         int spawnX = creature1.x;
         int spawnY = creature1.y;
+
 
         Creature child = new Creature(
                         species,
@@ -290,6 +305,7 @@ public class Main extends PApplet {
                         in_strength,
                         in_fears,
                         in_foods,
+                        in_personality,
                         spawnX,
                         spawnY
                 );
